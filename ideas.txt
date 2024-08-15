@@ -1,0 +1,13 @@
+Add different scenes altering the decor for every different day
+
+Add camera movement
+
+Add proper gradient / light source
+
+Add glowing effect
+
+Add stars for the night sky
+
+Stripe the sun as in retro style
+
+Have a suite of colors for the strip
