@@ -87,7 +87,7 @@ class Strip {
             x >= floor(this.cols / 2) - floor(this.roadWidth / 2) &&
             x < floor(this.cols / 2) + floor(this.roadWidth / 2)
           )
-            value = value;
+            value = 0;
   
           this.map[z][x] = value;
         }
