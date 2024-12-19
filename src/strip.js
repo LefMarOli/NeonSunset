@@ -28,6 +28,11 @@ class Strip {
       this.roadLeftEdge = floor(this.cols / 2) - floor(this.roadWidth / 2);
       this.roadRightEdge = floor(this.cols / 2) + floor(this.roadWidth / 2) - 1;
     }
+
+    resize(windowWidth){
+      this.width = windowWidth / 4.0;
+      this.widthHalf = this.width / 2.0;
+    }
   
     draw() {
       push();

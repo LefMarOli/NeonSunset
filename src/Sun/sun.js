@@ -1,54 +1,55 @@
 class Sun {
   #red = color(255, 0, 0);
+  #black = color(0, 0, 0);
   #yellow = color(255, 255, 0);
 
-  constructor(depth, radius = 50, speed = 0.05, yLimit = 60) {
+  constructor(depth, radius = 50, speed = 0.05, yLimit = 60, numRings = 5) {
     this.depth = depth;
     this.radius = radius;
     this.diameter = radius * 2;
     this.speed = speed;
     this.yLimit = yLimit;
+    this.numRings = numRings;
 
     this.direction = 1;
     this.pos = -yLimit;
+    this.posPercent = 1.0;
     this.bandsBaseline = radius;
-    this.#calculateBands();
-
-    console.log(this.bands);
+    this.#calculateStripes();
   }
 
-  #calculateBands() {
-    this.bands = [];
+  #calculateStripes() {
+    this.stripes = [];
 
-    let bandWidth = 2;
-    let bandCenter = -this.radius;
-    let bandSpacing = 7;
-    let bandTop = bandCenter - bandWidth / 2.0;
-    let bandBottom = bandCenter + bandWidth / 2.0;
+    let stripeWidth = 1;
+    let stripeSpacing = 7;
+    let stripeTop = -this.radius;
+    let stripeBottom = stripeTop + stripeWidth;
 
-    while (bandTop < this.radius) {
-      this.bands.push(new Band(bandTop, bandBottom));
+    while (stripeTop < this.radius) {
+      this.stripes.push(new Stripe(stripeTop, stripeBottom));
 
-      bandWidth += 1;
-      bandSpacing -= 1;
+      stripeWidth += 0.5;
+      stripeSpacing -= 0.5;
 
-      bandTop = bandBottom + bandSpacing;
-      bandBottom = bandTop + bandWidth;
+      stripeTop = stripeBottom + stripeSpacing;
+      stripeBottom = stripeTop + stripeWidth;
     }
   }
 
   #calculateNewState() {
-    this.#calculateNewPosition();
-    this.#calculateNewBorder();
-    this.#calculateNewColor();
+    this.#resolveHeight();
+    this.posPercent = map(-this.pos, -this.yLimit / 2.0, this.yLimit, 0, 1);
+    this.mainColor = lerpColor(this.#red, this.#yellow, this.posPercent);
   }
 
-  #calculateNewPosition() {
-    const x = sigmoid(
-      map(this.pos - this.yLimit / 6.0, -this.yLimit, this.yLimit, -4, 4)
-    );
+  #resolveHeight() {
+    //TODO: investigate capping x within boundary
+    const x = map(this.pos - this.yLimit / 6.0, -this.yLimit, this.yLimit, -4, 4)
 
-    const delta = x * this.direction * this.speed * deltaTime;
+    const y = sigmoid(x);
+
+    const delta = y * this.direction * this.speed * deltaTime;
 
     this.pos += delta;
     this.bandsBaseline -= delta;
@@ -57,41 +58,42 @@ class Sun {
     else if (this.pos < -this.yLimit && this.direction < 0) this.direction = 1;
   }
 
-  #calculateNewBorder() {
-    if (this.pos + this.radius > 0) {
-      const angle = Math.asin(-this.pos / this.radius);
-      this.startAngle = PI - angle;
-      this.endAngle = angle;
+  #calculateBorder(radius) {
+    let startAngle, endAngle;
+    if (this.pos + radius > 0) {
+      const angle = Math.asin(-this.pos / radius);
+      startAngle = PI - angle;
+      endAngle = angle;
     } else {
-      this.startAngle = 0;
-      this.endAngle = 2 * PI;
+      startAngle = 0;
+      endAngle = TWO_PI;
     }
-  }
-  
-  #calculateNewColor() {
-    const amt = map(-this.pos, -this.yLimit / 2.0, this.yLimit, 0, 1);
-    this.mainColor = lerpColor(this.#red, this.#yellow, amt);
+    return [startAngle, endAngle];
   }
 
-  #drawContour(fillColor) {
-    strokeWeight(1);
-    fill(fillColor);
-    arc(
-      0,
-      this.pos,
-      this.diameter,
-      this.diameter,
-      this.startAngle,
-      this.endAngle,
-      OPEN,
-      50
-    );
-  }
-
-  #fill() {
+  #drawMainCircle() {
+    const [startAngle, endAngle] = this.#calculateBorder(this.radius);
+    //Draws main color of circle
     push();
-    beginClip();
-    this.bands
+    this.#stripesClip(true)
+    fill(this.mainColor);
+    arc(0, this.pos, this.diameter, this.diameter, startAngle, endAngle, OPEN, 50);
+    pop();
+
+    //Draws inside stripes
+    const alphaStripes = map(this.posPercent, 0, 1, alpha(this.mainColor), 0);
+    const stripeColor = this.mainColor;
+    stripeColor.setAlpha(alphaStripes);
+    push();
+    this.#stripesClip(false)
+    fill(stripeColor);
+    arc(0, this.pos, this.diameter, this.diameter, startAngle, endAngle, OPEN, 50);
+    pop();
+  }
+
+  #stripesClip(invert){
+    beginClip({ invert: invert});
+    this.stripes
       .filter((b) => b.bottom + this.bandsBaseline + b.width < 0)
       .forEach((b) => {
         rect(
@@ -102,19 +104,47 @@ class Sun {
         );
       });
     endClip();
-    this.#drawContour(this.#red);
-    pop();
+  }
+
+  #drawRing(color, radius, weight) {
+    stroke(color);
+    strokeWeight(weight);
+    const [startAngle, endAngle] = this.#calculateBorder(radius);
+    const diameter = radius * 2;
+    arc(0, this.pos, diameter, diameter, startAngle, endAngle, OPEN, 50);
+  }
+
+  #drawRings() {
+    let upperAlphaBorder;
+    if(this.pos < 0)
+    {
+      //TODO Make rings disappear close to sun hidden
+      //let percent = map(-this.pos + this.diameter, -this.yLimit / 2.0, this.yLimit, 0, 1);
+      //upperAlphaBorder = map(this.posPercent, 0, 1, 175, 125);
+    }
+    
+    upperAlphaBorder = map(this.posPercent, 0, 1, 175, 125);
+    let glowColor = this.mainColor;
+
+    noFill();
+    blendMode(LIGHTEST);
+
+    for (let l = 0; l < this.numRings; l++) {
+      //Fading with distance
+      const amt = map(l, 0, this.numRings, upperAlphaBorder, 0);
+      glowColor.setAlpha(amt);
+
+      //TODO: Animate radiation outwards
+      const weight = 3 - l < 1 ? 1 : 3 - l;
+      this.#drawRing(glowColor, this.radius + 5 + 10 * l, weight);
+    }
   }
 
   draw() {
     this.#calculateNewState();
-    if (this.pos - this.radius > 0) {
-      return;
-    }
-
     push();
-    this.#drawContour(this.mainColor);
-    this.#fill();
+    this.#drawMainCircle();
+    this.#drawRings();
     pop();
   }
 }
