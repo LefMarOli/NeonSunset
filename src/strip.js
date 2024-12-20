@@ -11,8 +11,12 @@ class Strip {
       this.speed = speed;
       this.roadWidth = 10;
   
-      this.rows = floor(depth / scl);
-      this.cols = ceil(width / scl);
+      this.calcGrid();
+    }
+
+    calcGrid(){
+      this.rows = floor(this.depth / this.scl);
+      this.cols = ceil(this.width / this.scl);
       this.map = new Array(this.rows)
         .fill(0)
         .map(() => new Array(this.cols).fill(0));
@@ -32,6 +36,7 @@ class Strip {
     resize(windowWidth){
       this.width = windowWidth / 4.0;
       this.widthHalf = this.width / 2.0;
+      this.calcGrid();
     }
   
     draw() {
@@ -86,11 +91,11 @@ class Strip {
           value = 10 + map(value, 0, 1, 0, -25);
           if (value > 5) value = 5;
   
-          if (
-            x >= floor(this.cols / 2) - floor(this.roadWidth / 2) &&
-            x < floor(this.cols / 2) + floor(this.roadWidth / 2)
-          )
-            value = 0;
+          //if (
+          //  x >= floor(this.cols / 2) - floor(this.roadWidth / 2) &&
+          //  x < floor(this.cols / 2) + floor(this.roadWidth / 2)
+          //)
+          //  value = 0;
   
           this.map[z][x] = value;
         }

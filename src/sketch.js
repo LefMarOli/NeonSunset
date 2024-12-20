@@ -21,7 +21,7 @@ function setup() {
 
 function draw() {
   background(0, 0, 0);
-  camera(-1, -defaultHeight - 22, maxDepth + 100);
+  camera(-1, -defaultHeight - 32, maxDepth + 100);
   translate(-1, -defaultHeight, minDepth);
 
   strip.draw();
