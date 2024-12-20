@@ -30,5 +30,5 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  strip.Resize(windowWidth)
+  strip.resize(windowWidth);
 }

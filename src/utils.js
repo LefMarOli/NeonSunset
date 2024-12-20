@@ -1,5 +1,5 @@
 function sigmoid(z) {
-    return Math.exp(z) / Math.pow(1 + Math.exp(z), 2);
+    return 1 / (1 + Math.exp(-z));
   }
   
   function easeInOutSine(x) {
