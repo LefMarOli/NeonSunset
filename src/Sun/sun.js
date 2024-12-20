@@ -3,7 +3,7 @@ class Sun {
   #black = color(0, 0, 0);
   #yellow = color(255, 255, 0);
 
-  constructor(depth, radius = 50, speed = 0.05, yLimit = 60, numRings = 5) {
+  constructor(depth, radius = 50, speed = 0.05, yLimit = 70, numRings = 5) {
     this.depth = depth;
     this.radius = radius;
     this.diameter = radius * 2;
@@ -44,8 +44,9 @@ class Sun {
   }
 
   #resolveHeight() {
-    //TODO: investigate capping x within boundary
-    const x = map(this.pos - this.yLimit / 6.0, -this.yLimit, this.yLimit, -4, 4)
+    let x = map(this.pos, -this.yLimit, this.yLimit, -4, 4)
+    x = x > 4 ? 4 : x;
+    x = x < -4 ? -4 : x;
 
     const y = sigmoid(x);
 
@@ -54,8 +55,8 @@ class Sun {
     this.pos += delta;
     this.bandsBaseline -= delta;
 
-    if (this.pos > this.yLimit && this.direction > 0) this.direction = -1;
-    else if (this.pos < -this.yLimit && this.direction < 0) this.direction = 1;
+    if (this.pos >= this.yLimit && this.direction > 0) this.direction = -1;
+    else if (this.pos <= -this.yLimit && this.direction < 0) this.direction = 1;
   }
 
   #calculateBorder(radius) {
