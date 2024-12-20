@@ -3,7 +3,7 @@ class Sun {
   #black = color(0, 0, 0);
   #yellow = color(255, 255, 0);
 
-  constructor(depth, radius = 50, speed = 0.05, yLimit = 70, numRings = 5) {
+  constructor(depth, radius = 50, speed = 0.05, yLimit = 70, numRings = 10) {
     this.depth = depth;
     this.radius = radius;
     this.diameter = radius * 2;
@@ -44,13 +44,14 @@ class Sun {
   }
 
   #resolveHeight() {
-    let x = map(this.pos, -this.yLimit, this.yLimit, -4, 4)
-    x = x > 4 ? 4 : x;
-    x = x < -4 ? -4 : x;
-
+    const x = map(this.pos, -this.yLimit, this.yLimit, -4, 4)
     const y = sigmoid(x);
 
-    const delta = y * this.direction * this.speed * deltaTime;
+    let delta = y * this.direction * this.speed * deltaTime;
+    if(this.pos + delta > this.yLimit)
+      delta = this.yLimit - this.pos;
+    if(this.pos + delta < -this.yLimit)
+      delta = -this.yLimit - this.pos;
 
     this.pos += delta;
     this.bandsBaseline -= delta;
@@ -116,15 +117,7 @@ class Sun {
   }
 
   #drawRings() {
-    let upperAlphaBorder;
-    if(this.pos < 0)
-    {
-      //TODO Make rings disappear close to sun hidden
-      //let percent = map(-this.pos + this.diameter, -this.yLimit / 2.0, this.yLimit, 0, 1);
-      //upperAlphaBorder = map(this.posPercent, 0, 1, 175, 125);
-    }
-    
-    upperAlphaBorder = map(this.posPercent, 0, 1, 175, 125);
+    const  upperAlphaBorder = map(this.posPercent, 0, 1, 50, 175);
     let glowColor = this.mainColor;
 
     noFill();
