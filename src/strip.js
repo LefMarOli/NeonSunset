@@ -41,8 +41,6 @@ class Strip {
       noFill();
       ///this.#drawSkeleton();
       ///this.#drawRoad();
-      stroke(this.color);
-      strokeWeight(2);
       this.#moveMap();
       this.#drawStrip();
       pop();
@@ -100,8 +98,12 @@ class Strip {
     }
   
     #drawStrip() {
+      strokeWeight(2);
       for (let z = 0; z < this.rows - 1; z++) {
-        beginShape(TRIANGLE_STRIP);
+        const posPercent = map(z, 0, this.rows - 1, 0, 1);
+        const color = lerpColor(this.color, this.edgeColor, posPercent);
+        stroke(color)
+        beginShape(QUAD_STRIP);
         for (let x = 0; x < this.cols; x++) {
           vertex(this.xPos[x], this.map[z][x], this.zPos[z]);
           vertex(this.xPos[x], this.map[z + 1][x], this.zPos[z + 1]);
