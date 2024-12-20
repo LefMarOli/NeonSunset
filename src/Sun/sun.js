@@ -3,7 +3,7 @@ class Sun {
   #black = color(0, 0, 0);
   #yellow = color(255, 255, 0);
 
-  constructor(depth, radius = 50, speed = 0.05, yLimit = 70, numRings = 10) {
+  constructor(depth, radius = 50, speed = 0.03, yLimit = 80, numRings = 10) {
     this.depth = depth;
     this.radius = radius;
     this.diameter = radius * 2;
@@ -16,6 +16,10 @@ class Sun {
     this.posPercent = 1.0;
     this.bandsBaseline = radius;
     this.#calculateStripes();
+
+    this.ringRadius = this.radius + 2;
+    this.maxRingRadius = Math.max(this.radius + (10 * this.numRings), this.diameter);
+    this.ringSpeed = 0.005;
   }
 
   #calculateStripes() {
@@ -123,15 +127,22 @@ class Sun {
     noFill();
     blendMode(LIGHTEST);
 
+    this.ringRadius = this.#shiftRings(this.ringRadius, deltaTime * this.ringSpeed);
     for (let l = 0; l < this.numRings; l++) {
-      //Fading with distance
-      const amt = map(l, 0, this.numRings, upperAlphaBorder, 0);
-      glowColor.setAlpha(amt);
 
-      //TODO: Animate radiation outwards
-      const weight = 3 - l < 1 ? 1 : 3 - l;
-      this.#drawRing(glowColor, this.radius + 5 + 10 * l, weight);
+
+      let r = this.#shiftRings(this.ringRadius, (10 * l));
+      
+      //Fading with distance
+      const alphaAmount = map(r, this.radius, this.maxRingRadius, upperAlphaBorder, 0);
+      glowColor.setAlpha(alphaAmount);
+      const weight = map(r, this.radius, this.maxRingRadius, 3, 0.1);
+      this.#drawRing(glowColor, r, weight);
     }
+  }
+
+  #shiftRings(startingValue, offset){
+    return ((startingValue - this.radius - 2 + offset) % (this.maxRingRadius - this.radius - 2)) + this.radius + 2;
   }
 
   draw() {
